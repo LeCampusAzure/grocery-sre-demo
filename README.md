@@ -191,25 +191,6 @@ The MCP endpoint will be available at:
 https://ca-mcp-jira.<env>.azurecontainerapps.io/mcp
 ```
 
-### Configure MCP in VS Code
-
-Add to your VS Code settings or `.vscode/mcp.json`:
-
-```json
-{
-  "servers": {
-    "grafana": {
-      "type": "http",
-      "url": "https://ca-mcp-grafana.<env>.azurecontainerapps.io/mcp"
-    },
-    "jira": {
-      "type": "http", 
-      "url": "https://ca-mcp-jira.<env>.azurecontainerapps.io/mcp"
-    }
-  }
-}
-```
-
 ## 📚 Knowledge File for SRE Agent
 
 The `knowledge/` folder contains context for the SRE agent:
