@@ -130,10 +130,6 @@ resource apiContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'PORT'
               value: '3100'
             }
-            {
-              name: 'SUPPLIER_RATE_LIMIT'
-              value: '5'
-            }
           ]
           resources: {
             cpu: json('0.5')

@@ -111,17 +111,21 @@ app.get('/metrics', async (req, res) => {
 // ============================================
 // This simulates an external supplier inventory API that has rate limits.
 // After a certain number of requests, it starts returning 429 errors.
-// Configure via environment variable: SUPPLIER_RATE_LIMIT (default: 10)
+// Configure via environment variable: SUPPLIER_RATE_LIMIT (default: 0 = disabled)
+// Set to a positive number to enable artificial rate limiting for testing
 
 let supplierRequestCount = 0;
-const SUPPLIER_RATE_LIMIT = parseInt(process.env.SUPPLIER_RATE_LIMIT) || 10;
+const SUPPLIER_RATE_LIMIT = parseInt(process.env.SUPPLIER_RATE_LIMIT) || 0;
 const RATE_LIMIT_RESET_MS = parseInt(process.env.RATE_LIMIT_RESET_MS) || 60000;
 
 log('info', {
   event: 'supplier_config',
   rateLimit: SUPPLIER_RATE_LIMIT,
+  rateLimitEnabled: SUPPLIER_RATE_LIMIT > 0,
   resetWindowMs: RATE_LIMIT_RESET_MS,
-  message: `Supplier rate limit: ${SUPPLIER_RATE_LIMIT} requests per ${RATE_LIMIT_RESET_MS / 1000}s`,
+  message: SUPPLIER_RATE_LIMIT > 0 
+    ? `Supplier rate limit: ${SUPPLIER_RATE_LIMIT} requests per ${RATE_LIMIT_RESET_MS / 1000}s`
+    : 'Supplier rate limiting disabled (no artificial cap)',
 });
 
 // Reset the counter periodically (simulates rate limit window)
@@ -138,8 +142,8 @@ async function callSupplierAPI(productId) {
   supplierRequestCount++;
   activeSupplierRequests.set(supplierRequestCount);
   
-  // Simulate rate limiting from external supplier
-  if (supplierRequestCount > SUPPLIER_RATE_LIMIT) {
+  // Simulate rate limiting from external supplier (only if enabled)
+  if (SUPPLIER_RATE_LIMIT > 0 && supplierRequestCount > SUPPLIER_RATE_LIMIT) {
     supplierRequestsTotal.labels('rate_limited').inc();
     supplierRateLimitHits.inc();
     
@@ -367,8 +371,9 @@ app.get('/api/supplier/status', (req, res) => {
   const status = {
     requestCount: supplierRequestCount,
     limit: SUPPLIER_RATE_LIMIT,
-    remaining: Math.max(0, SUPPLIER_RATE_LIMIT - supplierRequestCount),
-    isRateLimited: supplierRequestCount >= SUPPLIER_RATE_LIMIT,
+    rateLimitEnabled: SUPPLIER_RATE_LIMIT > 0,
+    remaining: SUPPLIER_RATE_LIMIT > 0 ? Math.max(0, SUPPLIER_RATE_LIMIT - supplierRequestCount) : null,
+    isRateLimited: SUPPLIER_RATE_LIMIT > 0 && supplierRequestCount >= SUPPLIER_RATE_LIMIT,
     resetWindowMs: RATE_LIMIT_RESET_MS,
   };
   
