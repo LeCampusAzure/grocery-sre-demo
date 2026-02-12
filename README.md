@@ -223,9 +223,10 @@ curl https://ca-api-<token>.azurecontainerapps.io/api/supplier/status
 
 ### What Happens
 1. API makes 15 rapid requests to simulated supplier
-2. After 5 requests (configurable), supplier returns 429
-3. Errors are logged to Loki with `errorCode: SUPPLIER_RATE_LIMIT_429`
-4. Metrics are updated on `/metrics` endpoint
+2. By default, rate limiting is disabled (no artificial cap)
+3. If `SUPPLIER_RATE_LIMIT` is set to a positive value (e.g., 5), supplier returns 429 after that many requests
+4. Errors are logged to Loki with `errorCode: SUPPLIER_RATE_LIMIT_429`
+5. Metrics are updated on `/metrics` endpoint
 
 ## 🤖 Using the SRE Agent
 
@@ -270,8 +271,8 @@ grocery-sre-demo/
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | 3100 | API server port |
-| `SUPPLIER_RATE_LIMIT` | 5 | Requests before rate limit |
-| `RATE_LIMIT_RESET_MS` | 60000 | Rate limit reset window |
+| `SUPPLIER_RATE_LIMIT` | 0 (disabled) | Artificial rate limit for testing. Set to 0 or omit to disable. Set to positive number to enable. |
+| `RATE_LIMIT_RESET_MS` | 60000 | Rate limit reset window (only used if rate limiting enabled) |
 | `LOKI_HOST` | - | Loki push endpoint URL |
 
 ### Log Labels
